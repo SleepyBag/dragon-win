@@ -9,7 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
 
-namespace DragDropTest
+namespace DragonWindows
 {
     // delegate for GetPosition function of DragEventArgs and
     // MouseButtonEventArgs event argument objects. This delegate is used to reuse the code
@@ -29,21 +29,60 @@ namespace DragDropTest
             Resources.Add("MyFiles", files);
             InitializeComponent();
 
-            ListViewFiles.PreviewMouseLeftButtonDown += new MouseButtonEventHandler(ListView1_PreviewMouseLeftButtonDown);
+            // move for dragging
+            ListViewFiles.PreviewMouseMove += new MouseEventHandler(ListViewFiles_PreviewMouseMove);
+            // mouse up for selecting
+            ListViewFiles.PreviewMouseUp += new MouseButtonEventHandler(ListViewFiles_OnMouseUp);
         }
 
-        void ListView1_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        protected void ListViewFiles_OnMouseUp(object sender, MouseButtonEventArgs e)
         {
+            // select item when mouse up
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                int index = this.GetCurrentIndex(e.GetPosition);
+                var items = ListViewFiles.Items;
+                if (index >= 0 && index <= items.Count)
+                {
+                    var item = (File)items[index];
+                    // reverse selection state
+                    item.IsSelected = !item.IsSelected;
+                }
+            }
+        }
+
+        // disable default mouse down selection behavior of ListViewFiles
+        protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        void ListViewFiles_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            // if mouse is not pressed, just return
+            if (Mouse.LeftButton != MouseButtonState.Pressed)
+            {
+                return;
+            }
+
             int index = this.GetCurrentIndex(e.GetPosition);
 
             // get files for dragging
             List<string> filenames = new List<string>();
             // put the dragged file
-            filenames.Add(((File)ListViewFiles.Items[index]).FileName);
-            foreach (File file in ListViewFiles.SelectedItems)
+            var fileItems = ListViewFiles.Items;
+            // select current file, according to index
+            if (index >= 0 && index < fileItems.Count)
+            {
+                var currentFile = (File)fileItems[index];
+                currentFile.IsSelected = true;
+            }
+            // put all selected files into list
+            foreach (File file in fileItems)
             {
                 // if other file selected, also put in
-                if (!filenames.Contains(file.FileName))
+                // only drag selected files
+                if (!filenames.Contains(file.FileName) && file.IsSelected)
                 {
                     filenames.Add(file.FileName);
                 }

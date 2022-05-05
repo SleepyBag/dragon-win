@@ -5,12 +5,30 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Media;
+using System.ComponentModel;
 
-namespace DragDropTest
+namespace DragonWindows
 {
-    public class File
+    public class File : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public string FileName { get; set; }
+
+        private bool isSelected = true;
+        public bool IsSelected { 
+            get
+            {
+                return isSelected;
+            }
+            set
+            {
+                isSelected = value;
+                // notify element
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
+            }
+        }
+
         public ImageSource PngIcon
         {
             get {
@@ -38,7 +56,6 @@ namespace DragDropTest
         {
             FileName = filename;
         }
-
     }
 
     public class Files : ObservableCollection<File>
