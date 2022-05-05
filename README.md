@@ -18,4 +18,4 @@ DragonWindows a.txt b.py C:\c.png
 Then a GUI window of these files will show and you can drag them from the window to any other places.
 The window is demonstrated as below.
 
-![demo](README\demo.png)
+![demo](https://raw.githubusercontent.com/SleepyBag/dragon-win/main/README/demo.png)
