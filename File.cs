@@ -70,7 +70,9 @@ namespace DragonWindows
             {
                 if (System.IO.File.Exists(filename) || System.IO.Directory.Exists(filename))
                 {
-                    Add(new File(filename));
+                    var currentDirectory = System.IO.Directory.GetCurrentDirectory();
+                    string fullFilename = System.IO.Path.GetFullPath(filename);
+                    Add(new File(fullFilename));
                 } 
                 else
                 {
