@@ -10,9 +10,13 @@
         av:DesignHeight="145.623" av:DesignWidth="238.343"
         >
     <Grid>
+        <Label Visibility="{Binding Source={StaticResource HelpVisibility}}">
+            <Run Text="{Binding Source={StaticResource HelpText}, Mode=OneWay}"></Run>
+        </Label>
         <ListView x:Name="ListViewFiles"
                   ItemsSource="{Binding Source={StaticResource MyFiles}}"
                   SelectionMode="Multiple"
+                  Visibility="{Binding Source={StaticResource MainWindowVisibility}}"
                   >
             <ListView.ItemTemplate>
                 <DataTemplate>

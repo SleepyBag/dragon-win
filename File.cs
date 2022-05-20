@@ -68,17 +68,7 @@ namespace DragonWindows
         {
             foreach (string filename in filenames)
             {
-                if (System.IO.File.Exists(filename) || System.IO.Directory.Exists(filename))
-                {
-                    var currentDirectory = System.IO.Directory.GetCurrentDirectory();
-                    string fullFilename = System.IO.Path.GetFullPath(filename);
-                    Add(new File(fullFilename));
-                } 
-                else
-                {
-                    System.Console.WriteLine("File does not exist when starting:");
-                    System.Console.WriteLine(filename);
-                }
+                Add(new File(filename));
             }
         }
     }

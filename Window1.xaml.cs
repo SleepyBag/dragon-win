@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
+using System.Runtime.CompilerServices;
 
 namespace DragonWindows
 {
@@ -21,18 +22,96 @@ namespace DragonWindows
     /// </summary>
     public partial class Window1 : Window
     {
+        private bool andExit = false;
+        private bool help = false;
+        private string helpText = @"
+Usage:
+    DragonWindows.exe [--and-exit] [-x] filename [filename2] ...
+
+Arguments:
+    --and-axit / -x: if specified, quit immediately after dragging done
+";
+
         public Window1()
         {
             var args = Environment.GetCommandLineArgs();
+            // skip the first argument, which is the self's filename
             args = args.Skip(1).ToArray();
-            Files files = new Files(args);
-            Resources.Add("MyFiles", files);
+
+            var filenames = new List<string>();
+            foreach (var arg in args)
+            {
+                if (arg == "--help" || arg == "-h")
+                {
+                    help = true;
+                } 
+                else if (arg == "--and-exit" || arg == "-x") {
+                    andExit = true;
+                } 
+                else
+                {
+                    filenames.Add(arg);
+                }
+            }
+
+            // check if filenames available
+            var currentDirectory = System.IO.Directory.GetCurrentDirectory();
+            var fullFilenames = new List<String>();
+            foreach (var filename in filenames)
+            {
+                if (System.IO.File.Exists(filename) || System.IO.Directory.Exists(filename))
+                {
+                    string fullFilename = System.IO.Path.GetFullPath(filename);
+                    fullFilenames.Add(fullFilename);
+                }
+                else
+                {
+                    System.Console.WriteLine("File does not exist when starting:");
+                    System.Console.WriteLine(filename);
+                }
+            }
+
+            if (help)
+            {
+                Resources.Add("HelpText", helpText);
+                Resources.Add("MyFiles", null);
+                // only help visible
+                Resources.Add("MainWindowVisibility", "hidden");
+                Resources.Add("HelpVisibility", "visible");
+            }
+            else
+            {
+                Resources.Add("HelpText", null);
+                // only files visible
+                Resources.Add("MainWindowVisibility", "visible");
+                Resources.Add("HelpVisibility", "hidden");
+
+                Files files = new Files(fullFilenames.ToArray());
+                Resources.Add("MyFiles", files);
+
+                if (fullFilenames.Count() == 0)
+                {
+                    System.Console.WriteLine("No valid filename is given!");
+                    this.Close();
+                }
+            }
             InitializeComponent();
+
+            // Esc to quit
+            this.KeyDown += new KeyEventHandler(Escape);
 
             // move for dragging
             ListViewFiles.PreviewMouseMove += new MouseEventHandler(ListViewFiles_PreviewMouseMove);
             // mouse up for selecting
             ListViewFiles.PreviewMouseUp += new MouseButtonEventHandler(ListViewFiles_OnMouseUp);
+        }
+
+        protected void Escape(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                this.Close();
+            }
         }
 
         protected void ListViewFiles_OnMouseUp(object sender, MouseButtonEventArgs e)
@@ -105,6 +184,10 @@ namespace DragonWindows
             // drag!
             var data = new DataObject(DataFormats.FileDrop, filenames.ToArray());
             DragDrop.DoDragDrop(this.ListViewFiles, data, DragDropEffects.Copy);
+            if (andExit)
+            {
+                this.Close();
+            }
         }
 
         ListViewItem GetListViewItem(int index)
