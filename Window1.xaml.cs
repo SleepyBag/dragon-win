@@ -9,6 +9,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
+using System.IO;
 
 namespace DragonWindows
 {
@@ -53,6 +56,13 @@ Arguments:
                     filenames.Add(arg);
                 }
             }
+
+            // glob matching
+            var matcher = new Matcher();
+            matcher.AddIncludePatterns(filenames);
+            PatternMatchingResult result = matcher.Execute(
+                new DirectoryInfoWrapper(new DirectoryInfo(".")));
+            filenames = result.Files.Select(file => file.Path).ToList();
 
             // check if filenames available
             var currentDirectory = System.IO.Directory.GetCurrentDirectory();
