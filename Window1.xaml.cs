@@ -59,9 +59,11 @@ Arguments:
             var runspace = RunspaceFactory.CreateRunspace();
             runspace.Open();
             var fullFilenames = new List<String>();
+            if (filenames.Any())
+            {
             using (PowerShell powershell = PowerShell.Create())
             {
-                powershell.Runspace= runspace;
+                    powershell.Runspace = runspace;
                 powershell.AddCommand("Resolve-Path");
                 powershell.AddArgument(filenames);
 
@@ -69,6 +71,7 @@ Arguments:
                 var paths = objects.Select(obj => obj.ToString());
                 fullFilenames.AddRange(paths);
                 }
+            }
 
             if (help)
             {
