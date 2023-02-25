@@ -4,13 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Controls.Primitives;
-using System.Runtime.CompilerServices;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 
 namespace DragonWindows
 {
@@ -28,10 +27,14 @@ namespace DragonWindows
         private bool help = false;
         private string helpText = @"
 Usage:
-    DragonWindows.exe [--and-exit] [-x] filename [filename2] ...
+    DragonWindows.exe [--and-exit] [-x] [--position x,y] filename [filename2] ...
 
 Arguments:
     --and-axit / -x: if specified, quit immediately after dragging done
+    --position / -p: specify the window position. Examples:
+        --position auto : Location is determined automatically by system.
+        --position mouse : Show the window at the mouse position
+        --position 200,400 : Show the window at the coordinate (200, 400)
 ";
 
         public Window1()
@@ -41,8 +44,14 @@ Arguments:
             args = args.Skip(1).ToArray();
 
             var filenames = new List<string>();
-            foreach (var arg in args)
+            bool useMousePosition = false;
+            bool useGivenPosition = false;
+            int posX = 0;
+            int posY = 0;
+
+            for (int i = 0; i < args.Length; ++i)
             {
+                var arg = args[i];
                 if (arg == "--help" || arg == "-h")
                 {
                     help = true;
@@ -50,6 +59,27 @@ Arguments:
                 else if (arg == "--and-exit" || arg == "-x") {
                     andExit = true;
                 } 
+                else if (arg == "--position" || arg == "-p")
+                {
+                    ++i;
+                    arg = args[i];
+                    if (arg == "auto")
+                    {
+                        useMousePosition = false;
+                        useGivenPosition = false;
+                    }
+                    else if (arg == "mouse")
+                    {
+                        useMousePosition = true;
+                    }
+                    else
+                    {
+                        useGivenPosition = true;
+                        var pos = arg.Split(',');
+                        posX = int.Parse(pos[0]);
+                        posY = int.Parse(pos[1]);
+                    }
+                }
                 else
                 {
                     filenames.Add(arg);
@@ -61,15 +91,15 @@ Arguments:
             var fullFilenames = new List<String>();
             if (filenames.Any())
             {
-            using (PowerShell powershell = PowerShell.Create())
-            {
+                using (PowerShell powershell = PowerShell.Create())
+                {
                     powershell.Runspace = runspace;
-                powershell.AddCommand("Resolve-Path");
-                powershell.AddArgument(filenames);
+                    powershell.AddCommand("Resolve-Path");
+                    powershell.AddArgument(filenames);
 
-                var objects = powershell.Invoke();
-                var paths = objects.Select(obj => obj.ToString());
-                fullFilenames.AddRange(paths);
+                    var objects = powershell.Invoke();
+                    var paths = objects.Select(obj => obj.ToString());
+                    fullFilenames.AddRange(paths);
                 }
             }
 
@@ -97,7 +127,22 @@ Arguments:
                     this.Close();
                 }
             }
+
             InitializeComponent();
+
+            if (useMousePosition)
+            {
+                var dpiScale = VisualTreeHelper.GetDpi(this);
+                var mousePosition = System.Windows.Forms.Control.MousePosition;
+                posX = (int)(mousePosition.X / dpiScale.DpiScaleX);
+                posY = (int)(mousePosition.Y / dpiScale.DpiScaleX);
+            }
+
+            if (useMousePosition || useGivenPosition)
+            {
+                this.Left = posX;
+                this.Top = posY;
+            }
 
             // Esc to quit
             this.KeyDown += new KeyEventHandler(Escape);
