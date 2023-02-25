@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/DragonWindows.csproj.user
+/.vs
+/.vs/*
+/obj
+/obj/*
+/bin
+/bin/*
+/packages
+/packages/*

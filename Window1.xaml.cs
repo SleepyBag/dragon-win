@@ -9,6 +9,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
 using System.Runtime.CompilerServices;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
 
 namespace DragonWindows
 {
@@ -54,22 +56,19 @@ Arguments:
                 }
             }
 
-            // check if filenames available
-            var currentDirectory = System.IO.Directory.GetCurrentDirectory();
+            var runspace = RunspaceFactory.CreateRunspace();
+            runspace.Open();
             var fullFilenames = new List<String>();
-            foreach (var filename in filenames)
+            using (PowerShell powershell = PowerShell.Create())
             {
-                if (System.IO.File.Exists(filename) || System.IO.Directory.Exists(filename))
-                {
-                    string fullFilename = System.IO.Path.GetFullPath(filename);
-                    fullFilenames.Add(fullFilename);
+                powershell.Runspace= runspace;
+                powershell.AddCommand("Resolve-Path");
+                powershell.AddArgument(filenames);
+
+                var objects = powershell.Invoke();
+                var paths = objects.Select(obj => obj.ToString());
+                fullFilenames.AddRange(paths);
                 }
-                else
-                {
-                    System.Console.WriteLine("File does not exist when starting:");
-                    System.Console.WriteLine(filename);
-                }
-            }
 
             if (help)
             {
